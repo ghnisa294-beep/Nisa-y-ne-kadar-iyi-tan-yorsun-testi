@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nisa'yı Ne Kadar Tanıyorsun?</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center;
+ font-family:Arial,sans-serif; background:linear-gradient(135deg,#fff1f6,#f7efff);
+ color:#333;
+}
+.game{
+ width:min(720px,92%); background:#fff; border-radius:28px; padding:32px;
+ box-shadow:0 18px 50px rgba(80,40,80,.15); text-align:center;
+}
+h1{color:#e85b8c;margin:5px 0 10px;font-size:32px}
+.subtitle{color:#777;margin-bottom:25px}
+button{
+ border:0;border-radius:16px;padding:16px 20px;font-size:16px;font-weight:bold;
+ cursor:pointer; transition:.15s; width:100%; margin:7px 0;
+}
+.start,.next,.again{background:#f06292;color:white}
+.start:hover,.next:hover,.again:hover{background:#e34d82;transform:translateY(-2px)}
+.choice{background:#faf7fb;color:#444;border:2px solid #f0dce5;text-align:left}
+.choice:hover{background:#fff0f5;border-color:#f06292}
+.choice.correct{background:#dff7e8;border-color:#65c18c}
+.choice.wrong{background:#ffe1e1;border-color:#ef6b6b}
+.top{display:flex;justify-content:space-between;font-weight:bold;color:#9b72c8;margin-bottom:10px}
+.bar{height:10px;background:#f0e2e9;border-radius:20px;overflow:hidden;margin-bottom:25px}
+.fill{height:100%;background:#f06292;width:0;transition:.3s}
+.question{font-size:23px;font-weight:bold;margin:25px 0}
+.feedback{height:28px;font-weight:bold;font-size:17px}
+.score{font-size:44px;font-weight:bold;color:#9b72c8}
+.hidden{display:none}
+.heart{font-size:45px}
+.small{font-size:13px;color:#999}
+</style>
+</head>
+<body>
+<div class="game">
+  <div id="startScreen">
+    <div class="heart">💗</div>
+    <h1>NİSA'YI NE KADAR TANIYORSUN?</h1>
+    <p class="subtitle">Bakalım Nisa hakkında gerçekten ne kadar bilgin var...</p>
+    <button class="start" onclick="startGame()">OYUNA BAŞLA</button>
+    <p class="small">20 soru • Her doğru cevap 1 puan</p>
+  </div>
+
+  <div id="quizScreen" class="hidden">
+    <div class="top">
+      <span id="questionNo">SORU 1 / 20</span>
+      <span id="score">SKOR: 0</span>
+    </div>
+    <div class="bar"><div id="fill" class="fill"></div></div>
+    <div id="question" class="question"></div>
+    <div id="choices"></div>
+    <div id="feedback" class="feedback"></div>
+  </div>
+
+  <div id="resultScreen" class="hidden">
+    <div class="heart">🏆</div>
+    <h1>OYUN BİTTİ!</h1>
+    <div id="finalScore" class="score"></div>
+    <p id="percent"></p>
+    <h2 id="resultText"></h2>
+    <button class="again" onclick="startGame()">TEKRAR OYNA</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+["Nisa'nın en sevdiği yemek hangisidir?",["Pizza","Mantı","Tavuklu pilav","Hamburger"],2],
+["Nisa'nın sevmediği bir yemek var mı?",["Evet, bir sürü var","Sadece sebze","Sadece balık","Yok"],3],
+["Nisa boş zamanında en çok ne yapmayı sever?",["Kitap okumak","Yeni filmler izlemek","Spor yapmak","Yemek yapmak"],1],
+["Nisa'nın en sevdiği renk hangisidir?",["Siyah","Pembe","Mavi","Beyaz"],3],
+["Nisa'nın en sevdiği şarkıcı kimdir?",["Ahmet Kaya","Tarkan","Sezen Aksu","Mabel Matiz"],0],
+["Nisa'nın en sevdiği şarkı hangisidir?",["Kumralım","Dardayım","Ben Seni Çok Sevdim","Resimdeki Gözyaşları"],1],
+["Nisa'nın en sevdiği dizi hangisidir?",["Yargı","Medcezir","Sonyaz","Kiralık Aşk"],2],
+["Nisa hangi ülkeye gitmek ister?",["İtalya","Fransa","Amerika","İspanya"],3],
+["Nisa sabah insanı mı gece insanı mı?",["Sabah insanı","Gece insanı","İkisi de","Hiçbiri"],1],
+["Nisa sinirlendiğinde genellikle ne yapar?",["Susup bekler","Uyur","Bazen sinirini suçsuz insanlardan çıkarır","Hemen ortamdan gider"],2],
+["Nisa en çok neye güler?",["Sadece komik videolara","Sadece esprilere","Hiçbir şeye","Her şeye"],3],
+["Nisa insanlarda en sevmediği özellik nedir?",["Sessiz olmak","İnsanları küçük düşürmek","Çok konuşmak","Utangaç olmak"],1],
+["Nisa insanlarda en çok hangi özelliği sever?",["Kibirli olmak","Çok konuşmak","Mütevazı olmak","Çok ciddi olmak"],2],
+["Nisa'ya yapılabilecek en güzel sürpriz nedir?",["Sadece pahalı hediyeler","Tatile götürmek","Her şey","Sadece çiçek"],2],
+["Nisa alışveriş yaparken en çok ne alır?",["Kitap","Makyaj malzemesi","Ayakkabı","Teknolojik ürün"],1],
+["Nisa telefonda en çok hangi uygulamayı kullanır?",["Instagram","YouTube","TikTok","WhatsApp"],2],
+["Nisa'nın en büyük hayallerinden biri nedir?",["Güzellik merkezi açmak","Futbolcu olmak","Yazar olmak","Öğretmen olmak"],0],
+["Nisa'nın bir diğer büyük hayali nedir?",["Bir ada satın almak","Bütün dünyayı gezmek","Uzaya gitmek","Yarışmaya katılmak"],1],
+["Nisa'yı en hızlı ne mutlu eder?",["Sadece pahalı hediyeler","Sadece tatil","Ufacık bir hediye bile","Para"],2],
+["Nisa'nın en belirgin huyu nedir?",["Kıskanç olması","Merhametli olması","Sinirli olması","Çok ciddi olması"],1]
+];
+
+let current=0, score=0, answered=false;
+
+function startGame(){
+ current=0; score=0;
+ document.getElementById("startScreen").classList.add("hidden");
+ document.getElementById("resultScreen").classList.add("hidden");
+ document.getElementById("quizScreen").classList.remove("hidden");
+ showQuestion();
+}
+
+function showQuestion(){
+ answered=false;
+ const q=questions[current];
+ document.getElementById("questionNo").textContent=`SORU ${current+1} / 20`;
+ document.getElementById("score").textContent=`SKOR: ${score}`;
+ document.getElementById("fill").style.width=`${((current+1)/20)*100}%`;
+ document.getElementById("question").textContent=q[0];
+ document.getElementById("feedback").textContent="";
+ const box=document.getElementById("choices");
+ box.innerHTML="";
+ ["A","B","C","D"].forEach((letter,i)=>{
+   const b=document.createElement("button");
+   b.className="choice";
+   b.textContent=`${letter}) ${q[1][i]}`;
+   b.onclick=()=>answer(i,b);
+   box.appendChild(b);
+ });
+}
+
+function answer(i,button){
+ if(answered)return;
+ answered=true;
+ const q=questions[current];
+ const buttons=document.querySelectorAll(".choice");
+ buttons[q[2]].classList.add("correct");
+ if(i===q[2]){
+   score++;
+   button.classList.add("correct");
+   document.getElementById("feedback").textContent="DOĞRU! 🎉";
+   document.getElementById("feedback").style.color="#45a86b";
+ }else{
+   button.classList.add("wrong");
+   document.getElementById("feedback").textContent="YANLIŞ! 😭";
+   document.getElementById("feedback").style.color="#e45d5d";
+ }
+ document.getElementById("score").textContent=`SKOR: ${score}`;
+ setTimeout(()=>{
+   current++;
+   if(current<questions.length) showQuestion();
+   else showResult();
+ },900);
+}
+
+function showResult(){
+ document.getElementById("quizScreen").classList.add("hidden");
+ document.getElementById("resultScreen").classList.remove("hidden");
+ const percent=Math.round(score/20*100);
+ document.getElementById("finalScore").textContent=`${score} / 20`;
+ document.getElementById("percent").textContent=`Başarı: %${percent}`;
+ let text="";
+ if(score===20) text="🏆 EFSANE! Nisa'yı senden iyi tanıyan yok!";
+ else if(score>=17) text="🥇 MÜKEMMEL! Nisa hakkında bayağı bilgi sahibisin.";
+ else if(score>=14) text="🥈 ÇOK İYİ! Nisa seni sever.";
+ else if(score>=10) text="🥉 ORTA! Biraz daha Nisa bilgisi lazım.";
+ else if(score>=5) text="😅 ZAYIF! Nisa'yı biraz daha tanıman lazım.";
+ else text="💀 FELAKET! Bu testte nasıl bu kadar dağıldın?";
+ document.getElementById("resultText").textContent=text;
+}
+</script>
+</body>
+</html>
